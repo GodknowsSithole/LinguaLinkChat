@@ -1,0 +1,101 @@
+{
+ "tests": [
+  {
+   "id": "TC-01",
+   "name": "Register and log in",
+   "expected": "201/200 + JWT; /me returns profile without password hash",
+   "actual": "register=200, login=200, /me keys=['email', 'id', 'name', 'preferred_language']",
+   "status": "Pass"
+  },
+  {
+   "id": "TC-02",
+   "name": "Send message, auto-detect + translate eng->zul (emerging tech)",
+   "expected": "200; original_language=eng_Latn; recipient text differs from original; stored in history",
+   "actual": "status=200, lang=eng_Latn, recipient_text='Sawubona, ngidinga usizo ngefomu lami lesicelo.', history_rows=2",
+   "status": "Pass"
+  },
+  {
+   "id": "TC-03",
+   "name": "Invalid input is rejected with clear error codes",
+   "expected": "{'empty text': 422, 'text >3000 chars': 422, 'short password': 422, 'bad email': 422, 'unsupported language': 400, 'duplicate email': 409, 'wrong password': 401}",
+   "actual": "{'empty text': 422, 'text >3000 chars': 422, 'short password': 422, 'bad email': 422, 'unsupported language': 400, 'duplicate email': 409, 'wrong password': 401}",
+   "status": "Pass"
+  },
+  {
+   "id": "TC-04",
+   "name": "Access control: no/invalid token, third-party attachment, delete others' message",
+   "expected": "403 (no bearer), 401, 404, 403",
+   "actual": "403, 401, 404, 403",
+   "status": "Pass"
+  },
+  {
+   "id": "TC-05",
+   "name": "Blocked user cannot send message",
+   "expected": "403 'You cannot message this user'",
+   "actual": "403 You cannot message this user",
+   "status": "Pass"
+  },
+  {
+   "id": "TC-06",
+   "name": "Document upload: .txt accepted & translated on demand; .exe rejected",
+   "expected": "upload 200; .exe 400; translate 200 with text in recipient language",
+   "actual": "upload=200, exe=400, translate=200, text='Sicela ulethe idokhumenti yakho emtholampilo ngoMsombuluko.'",
+   "status": "Pass"
+  },
+  {
+   "id": "TC-07",
+   "name": "Real-time delivery over authenticated WebSocket",
+   "expected": "recipient receives type=message push with translated text",
+   "actual": "type=message, text='Sizokubona emtholampilo kusasa.', 4.57s",
+   "status": "Pass"
+  },
+  {
+   "id": "TC-08",
+   "name": "WebSocket with invalid token is rejected",
+   "expected": "connection closed (code 1008)",
+   "actual": "rejected (InvalidStatus)",
+   "status": "Pass"
+  },
+  {
+   "id": "TC-09",
+   "name": "Language detection on labelled sentences (7 languages, 35 sentences)",
+   "expected": ">= 90% correct (Assignment 2 objective)",
+   "actual": "33/35 = 94.3%",
+   "status": "Pass"
+  }
+ ],
+ "measures": {
+  "cold_start_first_translation_s": 14.4,
+  "document_translation_s": 3.89,
+  "translation_latency_n": 12,
+  "translation_latency_mean_s": 4.68,
+  "translation_latency_median_s": 3.23,
+  "translation_latency_max_s": 16.15,
+  "translation_within_3s_pct": 41.7,
+  "translation_success_pct": 100.0,
+  "history_fetch_mean_ms": 9.5,
+  "lang_detect_accuracy_pct": 94.3,
+  "lang_detect_n": 35,
+  "lang_detect_per_language": {
+   "eng_Latn": "5/5",
+   "afr_Latn": "5/5",
+   "zul_Latn": "5/5",
+   "xho_Latn": "5/5",
+   "sot_Latn": "5/5",
+   "tsn_Latn": "3/5",
+   "tso_Latn": "5/5"
+  },
+  "lang_detect_errors": [
+   [
+    "Ke batla go bula akhaonto ya banka.",
+    "tsn_Latn",
+    "sot_Latn"
+   ],
+   [
+    "Re tla etela lelapa la rona beke e e tlang.",
+    "tsn_Latn",
+    "sot_Latn"
+   ]
+  ]
+ }
+}

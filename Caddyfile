@@ -1,0 +1,16 @@
+{
+	# Uncomment and set your email for Let's Encrypt expiry notices
+	# email you@example.com
+}
+
+{$PUBLIC_DOMAIN} {
+	@api path /languages /auth/* /me /me/language /users /users/* /messages /messages/* /message/* /attachments/* /ws
+
+	handle @api {
+		reverse_proxy api:8000
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}

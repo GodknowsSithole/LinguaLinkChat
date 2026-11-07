@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+.next/
+.local/
+data/*.db
+data/*.db-*
+data/local-jwt-secret.txt
+data/logs/
+data/hf-cache/
+backend/uploads/
+backend/lingualink.db
+.env
+~$*
+
+# Coursework documents (kept locally, not published)
+assignments/
+*.tsbuildinfo

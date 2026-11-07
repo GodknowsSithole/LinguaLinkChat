@@ -1,0 +1,17 @@
+fastapi==0.115.8
+uvicorn[standard]==0.34.0
+transformers==4.48.3
+torch>=2.2.0
+sentencepiece==0.2.2
+python-multipart==0.0.20
+PyJWT==2.10.1
+pwdlib[argon2]==0.2.1
+pydantic==2.10.6
+email-validator==2.3.0
+hf_xet
+lingua-language-detector==2.2.0
+pypdf==6.18.0
+python-docx==1.2.0
+psycopg[binary]>=3.2
+psycopg_pool>=3.2
+python-dotenv>=1.0,<2

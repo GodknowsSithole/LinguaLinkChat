@@ -1,0 +1,51 @@
+services:
+ db:
+  image: postgres:16-alpine
+  restart: unless-stopped
+  environment:
+   POSTGRES_USER: lingualink
+   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+   POSTGRES_DB: lingualink
+  volumes: ["pg-data:/var/lib/postgresql/data"]
+  healthcheck:
+   test: ["CMD-SHELL","pg_isready -U lingualink -d lingualink"]
+   interval: 5s
+   timeout: 5s
+   retries: 10
+ api:
+  build: ./backend
+  restart: unless-stopped
+  environment:
+   JWT_SECRET: ${JWT_SECRET}
+   DATABASE_URL: postgresql://lingualink:${POSTGRES_PASSWORD}@db:5432/lingualink
+   NUM_BEAMS: ${NUM_BEAMS:-2}
+   TRANSLATION_PROVIDER: ${TRANSLATION_PROVIDER:-nllb}
+   GOOGLE_TRANSLATE_API_KEY: ${GOOGLE_TRANSLATE_API_KEY:-}
+  volumes: ["./data/uploads:/app/uploads","hf-cache:/root/.cache/huggingface"]
+  expose: ["8000"]
+  depends_on:
+   db: {condition: service_healthy}
+ web:
+  build:
+   context: ./frontend
+   args:
+    NEXT_PUBLIC_API_URL: https://${PUBLIC_DOMAIN}
+  restart: unless-stopped
+  expose: ["3000"]
+  depends_on: [api]
+ proxy:
+  image: caddy:2-alpine
+  restart: unless-stopped
+  ports: ["80:80", "443:443"]
+  environment:
+   PUBLIC_DOMAIN: ${PUBLIC_DOMAIN}
+  volumes:
+   - ./Caddyfile:/etc/caddy/Caddyfile
+   - caddy-data:/data
+   - caddy-config:/config
+  depends_on: [api, web]
+volumes:
+ hf-cache:
+ pg-data:
+ caddy-data:
+ caddy-config:

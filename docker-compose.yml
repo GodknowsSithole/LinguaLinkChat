@@ -1,0 +1,37 @@
+services:
+ db:
+  image: postgres:16-alpine
+  restart: unless-stopped
+  environment:
+   POSTGRES_USER: lingualink
+   POSTGRES_PASSWORD: lingualink_dev
+   POSTGRES_DB: lingualink
+  volumes: ["pg-data:/var/lib/postgresql/data"]
+  healthcheck:
+   test: ["CMD-SHELL","pg_isready -U lingualink -d lingualink"]
+   interval: 5s
+   timeout: 5s
+   retries: 10
+ api:
+  build: ./backend
+  ports: ["8000:8000"]
+  environment:
+   JWT_SECRET: replace-with-a-long-random-secret
+   DATABASE_URL: postgresql://lingualink:lingualink_dev@db:5432/lingualink
+   NUM_BEAMS: "2"
+   QUANTIZE_INT8: "1"
+   TRANSLATION_PROVIDER: ${TRANSLATION_PROVIDER:-nllb}
+   GOOGLE_TRANSLATE_API_KEY: ${GOOGLE_TRANSLATE_API_KEY:-}
+  volumes: ["./data/uploads:/app/uploads","hf-cache:/root/.cache/huggingface"]
+  depends_on:
+   db: {condition: service_healthy}
+ web:
+  build:
+   context: ./frontend
+   args:
+    NEXT_PUBLIC_API_URL: http://localhost:8000
+  ports: ["3000:3000"]
+  depends_on: [api]
+volumes:
+ hf-cache:
+ pg-data:
