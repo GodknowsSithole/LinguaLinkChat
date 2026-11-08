@@ -1,0 +1,34 @@
+services:
+ api:
+  build: ./backend
+  restart: unless-stopped
+  environment:
+   JWT_SECRET: ${JWT_SECRET}
+   DATABASE_URL: sqlite:////app/db/lingualink.db
+   NUM_BEAMS: ${NUM_BEAMS:-2}
+   TRANSLATION_PROVIDER: ${TRANSLATION_PROVIDER:-google}
+   GOOGLE_TRANSLATE_API_KEY: ${GOOGLE_TRANSLATE_API_KEY:-}
+  volumes: ["./data/db:/app/db","./data/uploads:/app/uploads"]
+  expose: ["8000"]
+ web:
+  build:
+   context: ./frontend
+   args:
+    NEXT_PUBLIC_API_URL: https://${PUBLIC_DOMAIN}
+  restart: unless-stopped
+  expose: ["3000"]
+  depends_on: [api]
+ proxy:
+  image: caddy:2-alpine
+  restart: unless-stopped
+  ports: ["80:80", "443:443"]
+  environment:
+   PUBLIC_DOMAIN: ${PUBLIC_DOMAIN}
+  volumes:
+   - ./Caddyfile:/etc/caddy/Caddyfile
+   - caddy-data:/data
+   - caddy-config:/config
+  depends_on: [api, web]
+volumes:
+ caddy-data:
+ caddy-config:
