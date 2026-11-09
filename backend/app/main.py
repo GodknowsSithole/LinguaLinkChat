@@ -116,13 +116,20 @@ async def push(uid,payload):
 @app.post("/messages")
 async def send(x:SendMessage,uid=Depends(current_user_id)):
  raw=x.text.strip()
- source=x.source_language or await asyncio.to_thread(detect_language,raw)
- valid_lang(source)
  with connect() as c:
   recipient=c.execute("SELECT * FROM users WHERE id=?",(x.recipient_id,)).fetchone()
   sender=c.execute("SELECT * FROM users WHERE id=?",(uid,)).fetchone()
   if not recipient:raise HTTPException(404,"Recipient not found")
   if is_blocked(c,uid,x.recipient_id):raise HTTPException(403,"You cannot message this user")
+ source=x.source_language
+ if not source:
+  try:source=await asyncio.to_thread(detect_language,raw)
+  except TranslationError as exc:
+   if exc.status_code!=422:raise
+   source=""
+  # Undetected/unsupported language: assume the sender wrote in their own preferred language
+  if not source:source=sender["preferred_language"]
+ valid_lang(source)
  target=recipient["preferred_language"]
  translated=await asyncio.to_thread(get_translator().translate,raw,source,target)
  with connect() as c:
@@ -144,7 +151,10 @@ async def send_document(recipient_id:int=Form(...),file:UploadFile=File(...),uid
   sender=c.execute("SELECT * FROM users WHERE id=?",(uid,)).fetchone()
   if not recipient:raise HTTPException(404,"Recipient not found")
   if is_blocked(c,uid,recipient_id):raise HTTPException(403,"You cannot message this user")
- source=await asyncio.to_thread(detect_language,text) or "eng_Latn"
+ try:source=await asyncio.to_thread(detect_language,text) or sender["preferred_language"]
+ except TranslationError as exc:
+  if exc.status_code!=422:raise
+  source=sender["preferred_language"]
  valid_lang(source)
  attachment_path,attachment_mime=save_attachment(file.filename,data)
  with connect() as c:
